@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodShare - Food Donation Platform</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <header>
+        <h2>FoodShare 🍲</h2>
+        <nav>
+            <a href="/">Home</a>
+            <a href="#donate">Donate Food</a>
+            <a href="#available">Available Food</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Share Food, Save Lives ❤️</h1>
+        <p>Don't waste food. Share it with people who need it.</p>
+        <a href="#donate" class="btn">Donate Now</a>
+    </section>
+
+    <section id="donate" class="container">
+        <h2>Donate Surplus Food</h2>
+
+        <form action="/donate" method="POST">
+            <input type="text" name="food_name" placeholder="Food Name" required>
+
+            <input type="text" name="quantity" placeholder="Quantity" required>
+
+            <input type="text" name="location" placeholder="Pickup Location" required>
+
+            <button type="submit">Submit Donation</button>
+        </form>
+    </section>
+
+    <section id="available" class="container">
+        <h2>Available Food Donations</h2>
+
+        <div class="food-list">
+            {% for food in donations %}
+            <div class="food-card">
+                <h3>{{ food.food_name }}</h3>
+                <p>Quantity: {{ food.quantity }}</p>
+                <p>Location: {{ food.location }}</p>
+            </div>
+            {% else %}
+            <p>No food donations available yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 FoodShare | Reduce Food Waste, Share Happiness</p>
+    </footer>
+
+</body>
+
+</html>

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Create your account' if mode == 'register' else 'Welcome back' }} — FoodShare{% endblock %}
+{% block content %}
+<section class="auth-wrap"><div class="auth-aside"><span class="eyebrow eyebrow-light">GOOD FOOD, GOOD PEOPLE</span><h1>{{ 'A seat at the table' if mode == 'register' else 'Good to see you again.' }}</h1><p>{{ 'Join the neighbours making sure good food gets where it belongs.' if mode == 'register' else 'Your community is just a sign-in away.' }}</p><div class="auth-quote"><p><span class="auth-quote-open">“</span>Food is better when it's shared.<span class="auth-quote-close">”</span></p></div></div>
+  <div class="auth-card"><a class="back-link" href="{{ url_for('home') }}">← Back home</a><h2>{{ 'Create an account' if mode == 'register' else 'Welcome back' }}</h2><p class="form-intro">{{ 'It only takes a minute to get started.' if mode == 'register' else 'Sign in to pick up where you left off.' }}</p>
+    <form method="post" class="form-stack"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="next" value="{{ next_url or '' }}">
+      {% if mode == 'register' %}
+        <label>I'm here to<select name="role" required><option value="receiver" {{ 'selected' if request.args.get('role') == 'receiver' else '' }}>Find and receive food</option><option value="donor" {{ 'selected' if request.args.get('role') == 'donor' else '' }}>Share surplus food</option></select></label>
+        <div class="form-row"><label>Full name<input name="full_name" autocomplete="name" maxlength="120" required value="{{ request.form.get('full_name', '') }}"></label><label>Phone<input name="phone" type="tel" inputmode="numeric" autocomplete="tel" minlength="10" maxlength="10" pattern="[0-9]{10}" title="Enter exactly 10 digits with no spaces or punctuation." required value="{{ request.form.get('phone', '') }}"></label></div>
+        <label>Email address<input name="email" type="email" autocomplete="email" maxlength="254" required value="{{ request.form.get('email', '') }}"></label><label>Address<input name="address" autocomplete="street-address" maxlength="300" required value="{{ request.form.get('address', '') }}"></label>
+        <div class="form-row"><label>Password<input name="password" type="password" autocomplete="new-password" minlength="10" required></label><label>Confirm password<input name="confirm_password" type="password" autocomplete="new-password" minlength="10" required></label></div>
+      {% else %}<label>Email address<input name="email" type="email" autocomplete="email" required value="{{ request.form.get('email', '') }}"></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><div class="form-extra"><a href="{{ url_for('forgot_password') }}">Forgot password?</a></div>{% endif %}
+      <button class="button button-wide" type="submit">{{ 'Create my account' if mode == 'register' else 'Sign in' }} <span>↗</span></button>
+    </form><p class="auth-switch">{{ 'Already have an account?' if mode == 'register' else 'New to FoodShare?' }} <a href="{{ url_for('login' if mode == 'register' else 'register', next=next_url, role='donor' if next_url == url_for('new_donation') else none) }}">{{ 'Log in' if mode == 'register' else 'Create an account' }}</a></p>{% if mode == 'login' %}<p class="admin-note">Administrator? Sign in with your admin account to open the management dashboard.</p>{% endif %}
+  </div>
+</section>
+{% endblock %}

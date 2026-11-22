@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Share food — FoodShare{% endblock %}
+{% block content %}
+<section class="dashboard-shell form-page"><a class="back-link" href="{{ url_for('donor_dashboard') }}">← Back to your dashboard</a><div class="dashboard-heading"><div><span class="eyebrow">A GOOD THING STARTS HERE</span><h1>Share a little <span>good.</span></h1><p>Tell your neighbours what's available and when they can pick it up.</p></div></div>
+  <form method="post" enctype="multipart/form-data" class="donation-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="form-section"><span class="form-section-number">01</span><div><h2>About the food</h2><p>A clear description helps people decide if it's right for them.</p></div>
+    <div class="form-grid"><label>Food name<input name="food_name" maxlength="120" placeholder="e.g. Fresh vegetable curry" value="{{ request.form.get('food_name','') }}" required></label><label>Food category<select name="category" required><option value="">Choose a category</option>{% for category in categories %}<option value="{{ category }}" {{ 'selected' if request.form.get('category') == category else '' }}>{{ category }}</option>{% endfor %}</select></label>
+      <label class="form-span">Description<textarea name="description" rows="4" maxlength="3000" placeholder="Ingredients, storage notes, or anything else a neighbour should know">{{ request.form.get('description','') }}</textarea></label>
+      <div class="form-row"><label>Quantity<input name="quantity" type="number" min="0.1" max="100000" step="any" placeholder="e.g. 12" value="{{ request.form.get('quantity','') }}" required></label><label>Quantity unit<input name="quantity_unit" maxlength="24" placeholder="servings, boxes, kg…" value="{{ request.form.get('quantity_unit','servings') }}" required></label></div>
+      <label>People it can serve <span class="optional">optional</span><input name="people_served" type="number" min="1" step="1" placeholder="e.g. 8" value="{{ request.form.get('people_served','') }}"></label>
+      <label class="form-span">Food photo <span class="optional">optional · JPG, PNG, or WebP, max 5 MB</span><input name="image" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"></label>
+    </div>
+  </div>
+  <div class="form-section"><span class="form-section-number">02</span><div><h2>Timing & pickup</h2><p>Help people plan when and where to collect their food.</p></div>
+    <div class="form-grid"><label>Prepared on<input name="preparation_datetime" type="datetime-local" value="{{ request.form.get('preparation_datetime','') }}" required></label><label>Use by / pickup deadline<input name="expiry_datetime" type="datetime-local" value="{{ request.form.get('expiry_datetime','') }}" required></label>
+      <label class="form-span">Pickup address<input id="pickup-address" name="pickup_address" maxlength="300" placeholder="Street, neighbourhood, city" value="{{ request.form.get('pickup_address','') }}" required></label>
+      <div class="form-row"><label>Latitude <span class="optional">optional</span><input id="latitude" name="latitude" type="number" min="-90" max="90" step="any" placeholder="40.7128" value="{{ request.form.get('latitude','') }}"></label><label>Longitude <span class="optional">optional</span><input id="longitude" name="longitude" type="number" min="-180" max="180" step="any" placeholder="-74.0060" value="{{ request.form.get('longitude','') }}"></label></div>
+      <button class="button button-outline button-small locate-button" type="button" data-locate>Use my current location</button>
+      <a class="text-link form-span" href="{{ url_for('nearby_food') }}">Find NGOs within 5 km ↗</a>
+      <label class="form-span">Pickup availability<input name="availability_time" maxlength="120" placeholder="e.g. Today, 4–6 PM" value="{{ request.form.get('availability_time','') }}"></label>
+    </div>
+  </div><div class="form-submit"><p>Your listing will be reviewed before it appears to receivers.</p><button class="button" type="submit">Submit food donation <span>↗</span></button></div></form>
+</section>
+{% endblock %}

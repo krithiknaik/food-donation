@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block title %}Admin dashboard — FoodShare{% endblock %}
+{% block content %}
+<section class="dashboard-shell admin-shell">
+  <div class="dashboard-heading">
+    <div>
+      <span class="eyebrow">KEEPING GOOD THINGS MOVING</span>
+      <h1>Admin <span>dashboard.</span></h1>
+      <p>Review activity, care for the community, and keep the platform running smoothly.</p>
+    </div>
+    <span class="admin-label">ADMINISTRATOR</span>
+  </div>
+
+  <div class="stat-grid admin-stats">
+    <article class="stat-card"><span>Total users</span><strong>{{ stats.users }}</strong><small>{{ stats.donors }} donors · {{ stats.receivers }} receivers</small></article>
+    <article class="stat-card"><span>Food listings</span><strong>{{ stats.donations }}</strong><small>{{ stats.pending }} awaiting review</small></article>
+    <article class="stat-card"><span>Requests sent</span><strong>{{ stats.requests }}</strong><small>Across all food donations</small></article>
+    <article class="stat-card"><span>Completed</span><strong>{{ stats.completed }}</strong><small>Donations marked picked up</small></article>
+  </div>
+
+  <div class="panel admin-chart-panel">
+    <div class="panel-heading"><div><span class="eyebrow">PLATFORM ACTIVITY</span><h2>Donation status overview</h2></div></div>
+    <div class="admin-chart">
+      {% for status, count in donation_status_counts.items() %}
+      <div class="chart-row">
+        <span>{{ status|replace('_',' ')|title }}</span>
+        <div class="chart-track"><span class="chart-bar chart-{{ status }}" style="width: {{ (count / chart_max * 100)|round|int }}%"></span></div>
+        <strong>{{ count }}</strong>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="panel" id="users">
+    <div class="panel-heading"><div><span class="eyebrow">COMMUNITY MEMBERS</span><h2>Manage user accounts</h2></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th><th>Role</th><th>Joined</th><th>Account</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td class="table-primary">{{ user.full_name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.phone or '—' }}</td>
+            <td>{{ user.address or '—' }}</td>
+            <td>{{ user.role|title }}</td>
+            <td>{{ user.created_at.strftime('%b %d, %Y') }}</td>
+            <td><span class="status-pill status-{{ user.account_status }}">{{ user.account_status|title }}</span></td>
+            <td>
+              {% if user.role != 'admin' %}
+              <div class="table-actions">
+                <form method="post" action="{{ url_for('toggle_user', user_id=user.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="text-button" type="submit">{{ 'Deactivate' if user.account_status == 'active' else 'Activate' }}</button>
+                </form>
+                {% if user.id != current_user.id %}
+                <form method="post" action="{{ url_for('delete_user', user_id=user.id) }}" data-confirm="Are you sure you want to delete this record? This also deletes the account's donations, requests, notifications, and reports.">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="text-button text-danger" type="submit">Delete</button>
+                </form>
+                {% endif %}
+              </div>
+              {% else %}
+              <span class="muted">Protected</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" id="donations">
+    <div class="panel-heading"><div><span class="eyebrow">FOOD SAFETY & QUALITY</span><h2>Review food listings</h2></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Food</th><th>Donor</th><th>Category</th><th>Quantity</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for donation in donations %}
+          <tr>
+            <td><a class="table-primary" href="{{ url_for('donation_details', donation_id=donation.id) }}">{{ donation.food_name }}</a></td>
+            <td>{{ donation.donor.full_name }}</td>
+            <td>{{ donation.category }}</td>
+            <td>{{ donation.quantity|round(1) }} {{ donation.quantity_unit }}</td>
+            <td><span class="status-pill status-{{ donation.status }}">{{ donation.status|title }}</span></td>
+            <td class="table-actions">
+              {% if donation.status == 'pending' %}
+              <form method="post" action="{{ url_for('moderate_donation', donation_id=donation.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="approve">
+                <button class="text-button" type="submit">Approve</button>
+              </form>
+              <form method="post" action="{{ url_for('moderate_donation', donation_id=donation.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="reject">
+                <button class="text-button text-danger" type="submit">Reject</button>
+              </form>
+              {% endif %}
+              <form method="post" action="{{ url_for('moderate_donation', donation_id=donation.id) }}" data-confirm="Are you sure you want to delete this record? This also removes the donation and its requests.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="remove">
+                <button class="text-button text-danger" type="submit">Remove</button>
+              </form>
+              {% if donation.status == 'expired' %}
+              <form method="post" action="{{ url_for('delete_expired_donation', donation_id=donation.id) }}" data-confirm="Are you sure you want to delete this record? This also deletes the expired food listing and its requests.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="text-button text-danger" type="submit">Delete expired</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="table-empty">No food listings yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" id="requests">
+    <div class="panel-heading"><div><span class="eyebrow">REQUEST ACTIVITY</span><h2>Monitor food requests</h2></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Food</th><th>Receiver</th><th>Quantity</th><th>Sent</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for food_request in requests %}
+          <tr>
+            <td>{{ food_request.donation.food_name }}</td>
+            <td>{{ food_request.receiver.full_name }}</td>
+            <td>{{ food_request.requested_quantity|round(1) }} {{ food_request.donation.quantity_unit }}</td>
+            <td>{{ food_request.created_at.strftime('%b %d, %Y') }}</td>
+            <td><span class="status-pill status-{{ food_request.request_status }}">{{ food_request.request_status|title }}</span></td>
+            <td class="table-actions">
+              {% if food_request.request_status == 'pending' %}
+              <form method="post" action="{{ url_for('admin_request_status', request_id=food_request.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="text-button text-danger" type="submit">Close request</button>
+              </form>
+              {% endif %}
+              <form method="post" action="{{ url_for('delete_request', request_id=food_request.id) }}" data-confirm="Are you sure you want to delete this record? This permanently deletes the food request.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="text-button text-danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="table-empty">No requests to review.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" id="reports">
+    <div class="panel-heading"><div><span class="eyebrow">COMMUNITY SAFETY</span><h2>Reported content & accounts</h2></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Reported</th><th>Submitted by</th><th>Reason</th><th>Details</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for report in reports %}
+          <tr>
+            <td>
+              {% if report.donation %}
+              <a class="table-primary" href="{{ url_for('donation_details', donation_id=report.donation.id) }}">{{ report.donation.food_name }}</a>
+              {% elif report.target_user %}
+              Account: {{ report.target_user.full_name }}
+              {% else %}
+              Removed content
+              {% endif %}
+            </td>
+            <td>{{ report.reporter.full_name }}</td>
+            <td>{{ report.reason }}</td>
+            <td>{{ report.description|truncate(120) }}</td>
+            <td><span class="status-pill status-{{ report.status }}">{{ report.status|title }}</span></td>
+            <td class="table-actions">
+              {% if report.status == 'open' %}
+              <form method="post" action="{{ url_for('update_report_status', report_id=report.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="resolved">
+                <button class="text-button" type="submit">Resolve</button>
+              </form>
+              <form method="post" action="{{ url_for('update_report_status', report_id=report.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="dismissed">
+                <button class="text-button text-danger" type="submit">Dismiss</button>
+              </form>
+              {% endif %}
+              <form method="post" action="{{ url_for('delete_report', report_id=report.id) }}" data-confirm="Are you sure you want to delete this record? This permanently deletes the report.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="text-button text-danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="table-empty">No reports. Thank you for keeping the community kind.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-heading"><div><span class="eyebrow">COMMUNITY MESSAGES</span><h2>Contact inbox</h2></div></div>
+    <div class="request-list">
+      {% for message in messages %}
+      <article class="request-row">
+        <div class="request-copy">
+          <h3>{{ message.name }} <span>{{ message.email }}</span></h3>
+          <p>{{ message.message }}</p>
+          <small>{{ message.created_at.strftime('%b %d, %Y · %I:%M %p') }}</small>
+          <form method="post" action="{{ url_for('delete_contact_message', message_id=message.id) }}" data-confirm="Are you sure you want to delete this record? This permanently deletes the contact message.">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="text-button text-danger" type="submit">Delete message</button>
+          </form>
+        </div>
+      </article>
+      {% else %}
+      <p class="panel-empty">No messages yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

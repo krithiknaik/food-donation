@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Your updates — FoodShare{% endblock %}
+{% block content %}
+<section class="dashboard-shell"><div class="dashboard-heading"><div><span class="eyebrow">A LITTLE SOMETHING TO KNOW</span><h1>Your <span>updates.</span></h1><p>Requests, approvals, and other good things happening in your account.</p></div></div>
+<div class="panel"><div class="notification-list">{% for item in notifications %}<article class="notification-row"><span class="notification-icon">{{ '↗' if item.notification_type == 'request' else '✓' if item.notification_type in ('accepted','completed') else '✳' }}</span><div><p>{{ item.message }}</p><small>{{ item.created_at.strftime('%b %d, %Y · %I:%M %p') }}</small></div></article>{% else %}<p class="panel-empty">You're all caught up. New updates will appear here.</p>{% endfor %}</div></div></section>
+{% endblock %}

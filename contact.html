@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Contact us — FoodShare{% endblock %}
+{% block content %}
+<section class="page-hero compact-hero"><span class="eyebrow">WE'RE ALL EARS</span><h1>Say <span>hello.</span></h1><p>Questions, feedback, or a good idea for your neighbourhood? We're listening.</p></section>
+<section class="contact-layout section"><div class="contact-info"><div class="contact-note"><span class="contact-icon">✳</span><h2>Let's make good things happen.</h2><p>Send our team a note and we'll get back to you as soon as we can.</p></div><div class="contact-details"><span class="eyebrow">A NOTE ABOUT FOOD SAFETY</span><p>Donors are responsible for ensuring shared food is safe and accurately described. Always confirm pickup and handling details directly with the donor.</p></div></div>
+  <form method="post" class="contact-form form-stack"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label>Your name<input name="name" autocomplete="name" maxlength="120" required value="{{ request.form.get('name', '') }}"></label><label>Email address<input name="email" type="email" autocomplete="email" required value="{{ request.form.get('email', '') }}"></label><label>Your message<textarea name="message" rows="6" minlength="10" maxlength="3000" required>{{ request.form.get('message', '') }}</textarea></label><button class="button" type="submit">Send message <span>↗</span></button></form>
+</section>
+{% endblock %}
